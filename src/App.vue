@@ -19,6 +19,7 @@
 <script>
 import flvjs from 'flv.js'
 import Cropper from 'cropperjs'
+import io from 'socket.io-client';
 
 export default {
   name: 'App',
@@ -27,12 +28,13 @@ export default {
     return {
       url: 'http://localhost:8002/live/test.flv',
       imgList: [],
-      cropperjs: null
+      cropperjs: null,
+      socket: io('ws://localhost:3002')
     }
   },
   mounted() {
-    console.log(this.$refs.video);
     this.viedoInit(this.url)
+    console.log(this.socket);
   },
   methods: {
     // 视频播放初始化
@@ -74,6 +76,7 @@ export default {
     },
     // 保存裁剪图片
     saveCutImg() {
+      let _this = this
       if (this.cropperjs == null) {
         alert('点击图片进行裁剪')
         return
@@ -89,12 +92,15 @@ export default {
         let f = new FileReader()
         f.readAsDataURL(blob)
         f.onload = function () {
-          // 发送图片等数据(暂未处理)
-          console.log(f.result);
-
+          // 发送图片等数据
+          _this.sendData(f.result)
         }
       })
       this.cropperjs.destroy()
+    },
+    sendData(file) {
+      console.log(file);
+      this.socket.emit('image', file)
     }
   }
 }
